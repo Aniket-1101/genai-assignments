@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">
+  <w:body>
+    <w:p><w:r><w:t>Changes made before smoke test generation flow</w:t></w:r></w:p>
+
+    <w:p><w:r><w:t>1. File: src/scripts/prompts.js</w:t></w:r></w:p>
+    <w:p>
+      <w:r><w:t>- Added new Playwright+TypeScript prompt templates:</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:r><w:t>  • PLAYWRIGHT_TS_PAGE_ONLY</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:r><w:t>  • CUCUMBER_WITH_PLAYWRIGHT_TS_STEPS</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:r><w:t>- Added new entries to CODE_GENERATOR_TYPES for Playwright TypeScript.</w:t></w:r>
+    </w:p>
+
+    <w:p><w:r><w:t>2. File: src/scripts/chat.js</w:t></w:r></w:p>
+    <w:p>
+      <w:r><w:t>- Mapped TypeScript+Playwright combinations to new prompt keys in getPromptKeys()</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:r><w:t>- Added helper method: isTypeScriptPlaywright(language, engine)</w:t></w:r>
+    </w:p>
+    <w:p>
+      <w:r><w:t>- Updated unsupported-combination message to include Playwright TypeScript.</w:t></w:r>
+    </w:p>
+
+    <w:p><w:r><w:t>3. File: panel.html</w:t></w:r></w:p>
+    <w:p>
+      <w:r><w:t>- Verified that UI already contains options for TypeScript (value="ts") and Playwright (value="playwright"). No code changes made.</w:t></w:r>
+    </w:p>
+
+    <w:p><w:r><w:t>Code snippets (inserted lines)</w:t></w:r></w:p>
+    <w:p><w:r><w:t>prompts.js additions:</w:t></w:r></w:p>
+    <w:p><w:r><w:t>  DEFAULT_PROMPTS.PLAYWRIGHT_TS_PAGE_ONLY = `...`</w:t></w:r></w:p>
+    <w:p><w:r><w:t>  DEFAULT_PROMPTS.CUCUMBER_WITH_PLAYWRIGHT_TS_STEPS = `...`</w:t></w:r></w:p>
+    <w:p><w:r><w:t>  // CODE_GENERATOR_TYPES entries: PLAYWRIGHT_TS_PAGE_ONLY, CUCUMBER_WITH_PLAYWRIGHT_TS_STEPS</w:t></w:r></w:p>
+
+    <w:p><w:r><w:t>chat.js additions (examples):</w:t></w:r></w:p>
+    <w:p><w:r><w:t>  if (this.isTypeScriptPlaywright(lang, eng)) { promptKeys.push('PLAYWRIGHT_TS_PAGE_ONLY'); }</w:t></w:r></w:p>
+    <w:p><w:r><w:t>  if (this.isTypeScriptPlaywright(lang, eng)) { promptKeys.push('CUCUMBER_WITH_PLAYWRIGHT_TS_STEPS'); }</w:t></w:r></w:p>
+    <w:p><w:r><w:t>  isTypeScriptPlaywright(language, engine) { return (language === 'ts' || language === 'typescript') && engine === 'playwright'; }</w:t></w:r></w:p>
+
+    <w:p><w:r><w:t>Notes:</w:t></w:r></w:p>
+    <w:p><w:r><w:t>- A smoke test script was added to `tools/smoke_test.mjs` to build and preview filled prompts locally.</w:t></w:r></w:p>
+    <w:p><w:r><w:t>- No UI changes were necessary in `panel.html` because the required options already existed.</w:t></w:r></w:p>
+
+    <w:p><w:sectPr/></w:p>
+  </w:body>
+</w:document>
