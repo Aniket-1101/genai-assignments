@@ -1,0 +1,52 @@
+{
+  "info": {
+    "_postman_id": "f5bb4d5f-617f-4623-9f58-f56bb5fba510",
+    "name": "PDF_API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "54349123",
+    "_collection_link": "https://go.postman.co/collection/54349123-f5bb4d5f-617f-4623-9f58-f56bb5fba510?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "PDF FLOW",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "x-api-key",
+            "value": "sk-Srstix2SDwT6vtuT5_92AAC5YIVgrvA6kZBj1I77rj0"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n\t\t           \"output_type\": \"text\",\r\n\t\t           \"input_type\": \"text\",\r\n\t\t           \"input_value\": \"Extract  only Unit Price as Unit Price is :\",\r\n\t\t           \"tweaks\": {\r\n\t\t             \"GroqModel-52dpw\": {\r\n\t\t               \"api_key\": \"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\",\r\n\t\t               \"model_name\": \"openai/gpt-oss-120b\",\r\n\t\t               \"temperature\": 0.3\r\n\t\t             }\r\n\t\t           }\r\n\t\t           \r\n\t\t         }",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:7860/api/v1/run/c420c282-f1bb-4500-98b3-8839a1009b2e",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "7860",
+          "path": [
+            "api",
+            "v1",
+            "run",
+            "c420c282-f1bb-4500-98b3-8839a1009b2e"
+          ]
+        },
+        "description": "Generated from cURL: curl --request POST \\\r\n     --url 'http://localhost:7860/api/v1/run/c420c282-f1bb-4500-98b3-8839a1009b2e?stream=false' \\\r\n     --header 'Content-Type: application/json' \\\r\n     --header \"x-api-key: YOUR_API_KEY_HERE\" \\ \r\n     --data '{\r\n\t\t           \"output_type\": \"text\",\r\n\t\t           \"input_type\": \"text\",\r\n\t\t           \"input_value\": \"hello world!\",\r\n\t\t           \"tweaks\": {\r\n\t\t             \"GroqModel-52dpw\": {\r\n\t\t               \"api_key\": \"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\",\r\n\t\t               \"model_name\": \"llama-3.1-8b-instant\",\r\n\t\t               \"temperature\": 0.1\r\n\t\t             }\r\n\t\t           },\r\n\t\t           \"session_id\": \"YOUR_SESSION_ID_HERE\"\r\n\t\t         }'"
+      },
+      "response": []
+    }
+  ]
+}
