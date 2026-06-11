@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User Story Review Agent</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f4f7fb;
+      color: #111827;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 24px;
+      background: radial-gradient(circle at top left, rgba(59, 130, 246, 0.10), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(16, 185, 129, 0.12), transparent 28%),
+        #eff6ff;
+    }
+
+    .page-shell {
+      width: min(1200px, 100%);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 420px;
+      gap: 24px;
+    }
+
+    .hero-card, .guide-card, .sample-card, .agent-card {
+      background: #ffffff;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      box-shadow: 0 30px 80px rgba(15, 23, 42, 0.08);
+      border-radius: 24px;
+      padding: 28px;
+    }
+
+    .hero-card {
+      grid-column: 1 / -1;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .hero-copy {
+      max-width: 640px;
+    }
+
+    .hero-copy h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      line-height: 1.05;
+    }
+
+    .hero-copy p {
+      margin: 18px 0 0;
+      max-width: 620px;
+      line-height: 1.75;
+      color: #475569;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .hero-actions button {
+      border: none;
+      border-radius: 14px;
+      padding: 14px 20px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #2563eb, #14b8a6);
+      color: white;
+    }
+
+    .btn-secondary {
+      background: #eef2ff;
+      color: #4338ca;
+    }
+
+    .section-title {
+      font-size: 1.05rem;
+      font-weight: 700;
+      margin-bottom: 16px;
+    }
+
+    .guide-card, .sample-card {
+      display: grid;
+      gap: 18px;
+    }
+
+    .guide-card p, .sample-card p {
+      margin: 0;
+      line-height: 1.8;
+      color: #475569;
+    }
+
+    .sample-box {
+      background: #f8fafc;
+      border: 1px solid rgba(148, 163, 184, 0.25);
+      border-radius: 18px;
+      padding: 18px;
+      line-height: 1.7;
+      color: #334155;
+      white-space: pre-wrap;
+    }
+
+    .sample-actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .sample-actions button {
+      border-radius: 12px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      padding: 12px 16px;
+      cursor: pointer;
+      background: white;
+      color: #1f2937;
+      font-weight: 600;
+    }
+
+    .agent-card {
+      position: sticky;
+      top: 24px;
+      display: grid;
+      gap: 18px;
+    }
+
+    .agent-header {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: center;
+    }
+
+    .agent-header h2 {
+      margin: 0;
+      font-size: 1.35rem;
+    }
+
+    .agent-header button {
+      width: 42px;
+      height: 42px;
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      border-radius: 12px;
+      background: #ffffff;
+      cursor: pointer;
+      color: #111827;
+      font-size: 1.1rem;
+    }
+
+    .session-badge {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      padding: 10px 14px;
+      border-radius: 14px;
+      background: rgba(59, 130, 246, 0.08);
+      color: #1e40af;
+      font-size: 0.95rem;
+    }
+
+    .chat-area {
+      display: grid;
+      gap: 14px;
+    }
+
+    .messages {
+      min-height: 360px;
+      max-height: 540px;
+      overflow-y: auto;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 22px;
+      padding: 18px;
+      background: #f8fafc;
+      display: grid;
+      gap: 14px;
+    }
+
+    .message {
+      display: grid;
+      gap: 10px;
+      max-width: 100%;
+    }
+
+    .message.user {
+      justify-content: end;
+      text-align: right;
+    }
+
+    .message.ai {
+      justify-content: start;
+    }
+
+    .bubble {
+      padding: 16px;
+      border-radius: 20px;
+      line-height: 1.75;
+      white-space: pre-wrap;
+    }
+
+    .bubble.user {
+      background: linear-gradient(135deg, #e0f2fe, #bfdbfe);
+      color: #0f172a;
+      border-bottom-right-radius: 4px;
+    }
+
+    .bubble.ai {
+      background: white;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      color: #111827;
+      border-bottom-left-radius: 4px;
+    }
+
+    .form-group {
+      display: grid;
+      gap: 10px;
+    }
+
+    .form-label {
+      font-weight: 700;
+      color: #0f172a;
+    }
+
+    textarea, input {
+      width: 100%;
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      border-radius: 18px;
+      padding: 14px 16px;
+      font-size: 0.98rem;
+      color: #111827;
+      background: #ffffff;
+      resize: vertical;
+    }
+
+    textarea {
+      min-height: 160px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .action-button {
+      border: none;
+      border-radius: 16px;
+      padding: 14px 22px;
+      background: #2563eb;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.18s ease, background 0.18s ease;
+    }
+
+    .action-button:hover {
+      transform: translateY(-1px);
+    }
+
+    .bubble-copy {
+      margin-top: 14px;
+      border: 1px solid rgba(15, 23, 42, 0.12);
+      background: #f8fafc;
+      color: #0f172a;
+      border-radius: 12px;
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      font-weight: 700;
+      align-self: flex-start;
+    }
+
+    .bubble-copy:hover {
+      background: #eef2ff;
+    }
+
+    .status-bar {
+      font-size: 0.95rem;
+      color: #475569;
+      min-height: 24px;
+    }
+
+    .status-bar.busy {
+      color: #1d4ed8;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 3px solid rgba(37, 99, 235, 0.2);
+      border-top-color: #2563eb;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      vertical-align: middle;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .note-box {
+      background: #ffffff;
+      border-radius: 18px;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      padding: 18px;
+      line-height: 1.75;
+      color: #475569;
+    }
+
+    .note-box strong {
+      color: #111827;
+    }
+
+    @media (max-width: 1080px) {
+      .page-shell {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 680px) {
+      body {
+        padding: 16px;
+      }
+
+      .hero-card {
+        padding: 20px;
+      }
+
+      .agent-card {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-shell">
+    <section class="hero-card">
+      <div class="hero-copy">
+        <p style="margin-bottom: 14px; color: #2563eb; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase;">User Story Review Agent</p>
+        <h1>Review Jira user stories using your Langflow flow</h1>
+        <p>Open the agent, paste a Jira user story or story key, and receive sharp, healthcare-ready review guidance from the configured Langflow review flow.</p>
+        <div class="hero-actions">
+          <button class="btn-primary" id="openAgentBtn">Open Review Agent</button>
+          <button class="btn-secondary" id="viewGuideBtn">How to Use</button>
+        </div>
+      </div>
+      <div style="max-width: 420px; display: grid; gap: 18px;">
+        <div class="note-box">
+          <strong>Langflow Endpoint</strong>
+          <p>This page sends user story content directly to your Langflow flow at <code>http://localhost:7860/api/v1/run/cc3bd38b-87d9-4d1e-a824-d174ad5a1bde</code>.</p>
+        </div>
+        <div class="note-box">
+          <strong>Session</strong>
+          <p>Every session uses a unique identifier so you can track review activity during this browser session.</p>
+        </div>
+      </div>
+    </section>
+
+    <aside class="agent-card" id="agentPanel" aria-live="polite">
+      <div class="agent-header">
+        <div>
+          <h2>Review Agent</h2>
+          <div class="session-badge">Session: <span id="sessionId"></span></div>
+        </div>
+        <button id="closeAgentBtn" title="Close agent">×</button>
+      </div>
+
+      <div class="chat-area">
+        <div class="form-group">
+          <label class="form-label" for="storyInput">Jira story text or key</label>
+          <textarea id="storyInput" placeholder="Paste a Jira user story here or enter a Jira key like PROJ-123"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="apiKeyInput">Langflow API key</label>
+          <input id="apiKeyInput" type="password" placeholder="Enter your Langflow x-api-key" autocomplete="off" />
+        </div>
+        <div class="form-group" style="display:flex;align-items:center;gap:8px;">
+          <input id="debugToggle" type="checkbox" />
+          <label for="debugToggle" style="margin:0;">Show raw Langflow JSON (debug)</label>
+        </div>
+
+        <div class="button-row">
+          <button class="action-button" id="reviewBtn">Review Story</button>
+          <button class="action-button secondary-button" id="copyReviewBtn">Copy Latest Review</button>
+          <button class="action-button secondary-button" id="clearChatBtn">Clear Chat</button>
+        </div>
+
+        <div class="status-bar" id="statusBar">Ready to review.</div>
+      </div>
+
+      <div class="messages" id="messageList"></div>
+      <div class="note-box">
+        <strong>Note:</strong> If you enter a Jira key, the Langflow flow will be asked to fetch and review the story. If you paste full story text, the flow will review it directly.
+      </div>
+    </aside>
+
+    <section class="guide-card" id="howToUse">
+      <div class="section-title">How to Use</div>
+      <p>1. Open the Review Agent and enter your story or Jira issue key.</p>
+      <p>2. Add your Langflow API key in the field above.</p>
+      <p>3. Click <strong>Review Story</strong> and wait for the agent to analyze the story.</p>
+      <p>4. Copy the AI review result or clear the chat to start again.</p>
+      <p>This page calls your local Langflow flow directly and displays results inside the chat window.</p>
+    </section>
+
+    <section class="sample-card">
+      <div class="section-title">Sample Fund Transfer User Story</div>
+      <div class="sample-box" id="sampleText">As a customer,
+I want to transfer funds between my accounts,
+So that I can manage my finances without visiting a branch.
+
+Acceptance Criteria:
+• User can select source account
+• User can select destination account
+• User can enter transfer amount
+• Amount must be greater than zero
+• Confirmation message should be displayed
+• Transaction should be saved successfully</div>
+      <div class="sample-actions">
+        <button id="copySampleBtn" class="secondary-button">Copy Sample</button>
+        <button id="pasteSampleBtn" class="secondary-button">Paste Sample</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const apiUrl = 'http://localhost:7860/api/v1/run/cc3bd38b-87d9-4d1e-a824-d174ad5a1bde';
+    const sessionId = createSessionId();
+    const openAgentBtn = document.getElementById('openAgentBtn');
+    const closeAgentBtn = document.getElementById('closeAgentBtn');
+    const viewGuideBtn = document.getElementById('viewGuideBtn');
+    const agentPanel = document.getElementById('agentPanel');
+    const sessionIdEl = document.getElementById('sessionId');
+    const storyInput = document.getElementById('storyInput');
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const reviewBtn = document.getElementById('reviewBtn');
+    const copyReviewBtn = document.getElementById('copyReviewBtn');
+    const clearChatBtn = document.getElementById('clearChatBtn');
+    const statusBar = document.getElementById('statusBar');
+    const messageList = document.getElementById('messageList');
+    const copySampleBtn = document.getElementById('copySampleBtn');
+    const pasteSampleBtn = document.getElementById('pasteSampleBtn');
+    const howToUse = document.getElementById('howToUse');
+
+    sessionIdEl.textContent = sessionId;
+    agentPanel.style.display = 'grid';
+
+    openAgentBtn.addEventListener('click', () => {
+      agentPanel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      agentPanel.style.transform = 'none';
+    });
+
+    closeAgentBtn.addEventListener('click', () => {
+      agentPanel.style.display = 'none';
+    });
+
+    viewGuideBtn.addEventListener('click', () => {
+      howToUse.scrollIntoView({ behavior: 'smooth' });
+    });
+
+    copySampleBtn.addEventListener('click', async () => {
+      await copyText(storyInput.value || document.getElementById('sampleText').textContent.trim());
+      setStatus('Sample text copied.');
+    });
+
+    pasteSampleBtn.addEventListener('click', () => {
+      storyInput.value = document.getElementById('sampleText').textContent.trim();
+      setStatus('Sample story pasted.');
+      storyInput.focus();
+    });
+
+    reviewBtn.addEventListener('click', handleReview);
+    copyReviewBtn.addEventListener('click', copyLatestReview);
+    clearChatBtn.addEventListener('click', clearChat);
+
+    function createSessionId() {
+      return 'sess-' + crypto.randomUUID().slice(0, 8);
+    }
+
+    function setStatus(message, busy = false) {
+      statusBar.textContent = message;
+      statusBar.classList.toggle('busy', busy);
+    }
+
+    function createMessageBubble(role, text) {
+      const wrapper = document.createElement('div');
+      wrapper.className = `message ${role}`;
+      const bubble = document.createElement('div');
+      bubble.className = `bubble ${role}`;
+
+      const content = document.createElement('div');
+      content.className = 'bubble-content';
+      content.innerHTML = text.replace(/\n/g, '<br>');
+      bubble.appendChild(content);
+
+      if (role === 'ai') {
+        const copyButton = document.createElement('button');
+        copyButton.type = 'button';
+        copyButton.className = 'bubble-copy';
+        copyButton.textContent = 'Copy review';
+        copyButton.addEventListener('click', async () => {
+          await copyText(content.textContent.trim());
+          setStatus('Review copied.');
+        });
+        bubble.appendChild(copyButton);
+      }
+
+      wrapper.appendChild(bubble);
+      return wrapper;
+    }
+
+    function appendMessage(role, text) {
+      const bubble = createMessageBubble(role, text);
+      messageList.appendChild(bubble);
+      messageList.scrollTop = messageList.scrollHeight;
+    }
+
+    async function copyText(value) {
+      try {
+        await navigator.clipboard.writeText(value);
+      } catch (error) {
+        console.warn('Copy failed', error);
+      }
+    }
+
+    function buildReviewPayload(inputValue) {
+      const trimmed = inputValue.trim();
+      if (!trimmed) {
+        throw new Error('Please enter a Jira story or key before reviewing.');
+      }
+
+      if (/^[A-Z][A-Z0-9_]+-\d+$/i.test(trimmed)) {
+        return `Review the Jira issue with key ${trimmed}. Use the configured Jira APIRequest in the Langflow flow to fetch the story and analyze it using the healthcare review rubric. Provide HTML output only.`;
+      }
+
+      return `Review the following Jira user story and score it against healthcare quality dimensions. Return HTML output only.\n\n${trimmed}`;
+    }
+
+    function deepFindText(obj) {
+      const preferKeys = ['outputs', 'message', 'text', 'repr', 'raw', 'output_value', 'output', 'result', 'results', 'data'];
+      const metadataKeys = new Set(['session_id', 'flow_id', 'id', 'timestamp', 'sender', 'sender_name', 'category', 'state', 'type']);
+      function helper(o, seen = new Set(), path = []) {
+        if (o == null) return null;
+        if (typeof o === 'string') {
+          const lastKey = path[path.length - 1];
+          if (metadataKeys.has(lastKey)) return null;
+          return o;
+        }
+        if (seen.has(o)) return null;
+        if (typeof o === 'object') seen.add(o);
+        if (Array.isArray(o)) {
+          for (const item of o) {
+            const r = helper(item, seen, path);
+            if (r) return r;
+          }
+          return null;
+        }
+        // check preferred keys first
+        for (const k of preferKeys) {
+          if (Object.prototype.hasOwnProperty.call(o, k)) {
+            const v = o[k];
+            const r = helper(v, seen, path.concat(k));
+            if (r) return r;
+          }
+        }
+        // otherwise walk all keys
+        for (const k in o) {
+          if (!Object.prototype.hasOwnProperty.call(o, k)) continue;
+          const r = helper(o[k], seen, path.concat(k));
+          if (r) return r;
+        }
+        return null;
+      }
+      return helper(obj);
+    }
+
+    async function extractLangflowResponse(responseBody) {
+      if (!responseBody) return null;
+      // If the body is already a string, return it
+      if (typeof responseBody === 'string') return responseBody;
+
+      // Try deep find of likely text fields
+      const found = deepFindText(responseBody);
+      if (found) return found;
+
+      // Fallback: pretty JSON
+      return JSON.stringify(responseBody, null, 2);
+    }
+
+    async function fetchLangflowReview(prompt) {
+      const apiKey = apiKeyInput.value.trim();
+      const headers = { 'Content-Type': 'application/json' };
+      if (apiKey) headers['x-api-key'] = apiKey;
+
+      const response = await fetch(apiUrl, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          output_type: 'text',
+          input_type: 'text',
+          input_value: prompt,
+        }),
+      });
+
+      if (!response.ok) {
+        const text = await response.text().catch(() => 'Unable to parse response.');
+        throw new Error(`Langflow API error ${response.status}: ${text}`);
+      }
+
+      const body = await response.json().catch(async () => {
+        const text = await response.text().catch(() => 'No body');
+        throw new Error(`Invalid Langflow response: ${text}`);
+      });
+
+      const extracted = await extractLangflowResponse(body);
+      if (!extracted) {
+        throw new Error('Langflow returned an empty response.');
+      }
+      return { text: extracted, raw: body };
+    }
+
+    async function handleReview() {
+      const rawInput = storyInput.value.trim();
+      if (!rawInput) {
+        setStatus('Please enter a Jira story or key.');
+        return;
+      }
+
+      const prompt = buildReviewPayload(rawInput);
+      appendMessage('user', rawInput);
+      setStatus('Review in progress...', true);
+
+      try {
+        const placeholder = createMessageBubble('ai', '<span class="spinner"></span> Reviewing...');
+        messageList.appendChild(placeholder);
+        messageList.scrollTop = messageList.scrollHeight;
+
+        const result = await fetchLangflowReview(prompt);
+        placeholder.remove();
+        appendMessage('ai', result.text);
+        // If debug enabled, also show raw JSON under the AI message
+        const debugToggle = document.getElementById('debugToggle');
+        if (debugToggle && debugToggle.checked) {
+          const pre = document.createElement('pre');
+          pre.style.overflowX = 'auto';
+          pre.style.background = '#0f172a';
+          pre.style.color = '#e6eef8';
+          pre.style.padding = '12px';
+          pre.style.borderRadius = '12px';
+          pre.style.marginTop = '8px';
+          pre.textContent = JSON.stringify(result.raw, null, 2);
+          const container = createMessageBubble('ai', '');
+          // put the pre inside the bubble
+          container.querySelector('.bubble').appendChild(pre);
+          messageList.appendChild(container);
+          messageList.scrollTop = messageList.scrollHeight;
+        }
+        setStatus('Review complete.');
+      } catch (error) {
+        setStatus(error.message);
+        const errMsg = `Error: ${error.message}`;
+        appendMessage('ai', errMsg);
+      }
+    }
+
+    async function copyLatestReview() {
+      const aiMessages = Array.from(messageList.querySelectorAll('.message.ai .bubble')).reverse();
+      if (!aiMessages.length) {
+        setStatus('No AI review available yet.');
+        return;
+      }
+      const lastContent = aiMessages[0].querySelector('.bubble-content');
+      const lastText = lastContent ? lastContent.textContent.trim() : aiMessages[0].textContent.trim();
+      await copyText(lastText);
+      setStatus('Latest review copied to clipboard.');
+    }
+
+    function clearChat() {
+      messageList.innerHTML = '';
+      setStatus('Chat cleared.');
+    }
+
+    // Ensure the agent panel is visible on load
+    agentPanel.style.display = 'grid';
+  </script>
+</body>
+</html>

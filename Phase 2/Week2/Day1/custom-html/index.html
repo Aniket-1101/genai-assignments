@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI Testcase Generator</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --surface: #ffeded;
+      --surface-strong: #ffcccc;
+      --text: #2b0a0a;
+      --accent: #c10000;
+      --chat-blue: #2563eb;
+      --muted: #5a2323;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(180deg, #ffeded 0%, #ffffff 100%);
+      color: var(--text);
+    }
+
+    .page {
+      display: grid;
+      grid-template-columns: 1fr 380px;
+      gap: 24px;
+      padding: 32px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.95);
+      border: 2px solid var(--accent);
+      border-radius: 22px;
+      padding: 24px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08);
+      overflow: auto;
+      max-height: calc(100vh - 80px);
+    }
+
+    .panel h1,
+    .panel h2 {
+      margin: 0 0 16px;
+      line-height: 1.1;
+    }
+
+    .instructions {
+      margin-bottom: 24px;
+      padding: 18px;
+      background: #fff5f5;
+      border: 1px solid #ffb3b3;
+      border-radius: 16px;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    .instructions strong {
+      color: var(--accent);
+    }
+
+    .control-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    button,
+    .sample-button {
+      border: none;
+      border-radius: 14px;
+      padding: 12px 18px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+      color: #ffffff;
+      background: var(--accent);
+      box-shadow: 0 12px 20px rgba(193, 0, 0, 0.18);
+    }
+
+    button:hover,
+    .sample-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 24px rgba(193, 0, 0, 0.24);
+    }
+
+    button.secondary {
+      background: #ffffff;
+      color: var(--accent);
+      border: 2px solid var(--accent);
+    }
+
+    .sample-item {
+      background: #fff5f5;
+      border: 1px solid #ffb3b3;
+      border-radius: 18px;
+      padding: 16px;
+      display: grid;
+      gap: 8px;
+    }
+
+    .sample-item h3 {
+      margin: 0;
+      font-size: 1rem;
+      color: var(--accent);
+    }
+
+    .sample-text {
+      font-size: 0.92rem;
+      line-height: 1.4;
+      color: #4e1c1c;
+      min-height: 72px;
+      overflow: hidden;
+    }
+
+    .sample-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .sample-button,
+    .sample-copy {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: normal;
+      min-width: 110px;
+      text-align: center;
+      gap: 6px;
+    }
+
+    .sample-copy {
+      background: #ffffff;
+      color: var(--accent);
+      border: 2px solid var(--accent);
+      box-shadow: none;
+    }
+
+    .sample-button.small {
+      min-width: auto;
+      padding: 10px 14px;
+      font-size: 0.88rem;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: var(--accent);
+    }
+
+    textarea,
+    .output-box {
+      width: 100%;
+      border-radius: 18px;
+      border: 2px solid #ffb3b3;
+      padding: 18px;
+      font-family: inherit;
+      font-size: 1rem;
+      line-height: 1.5;
+      resize: vertical;
+      min-height: 180px;
+      background: #fffaf8;
+      color: var(--text);
+      overflow: auto;
+    }
+
+    textarea {
+      min-height: 240px;
+    }
+
+    .output-box {
+      min-height: 220px;
+      background: #fff7f7;
+      white-space: pre-wrap;
+      overflow-y: auto;
+      max-height: 360px;
+    }
+
+    .story-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+      gap: 12px;
+    }
+
+    .section {
+      margin-bottom: 24px;
+    }
+
+    .langflow-card {
+      position: sticky;
+      top: 32px;
+      border: 2px solid var(--accent);
+      background: #ffffff;
+      border-radius: 24px;
+      padding: 22px;
+      box-shadow: 0 24px 48px rgba(0, 0, 0, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      max-height: calc(100vh - 80px);
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+
+    .langflow-card h2 {
+      margin-bottom: 0;
+    }
+
+    .langflow-card .chat-info {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.5;
+    }
+
+    .chat-launch {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 18px;
+      border-radius: 18px;
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      width: 100%;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    .chat-launch:hover {
+      opacity: 0.95;
+    }
+
+    .chat-status {
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin-top: -6px;
+      padding-left: 4px;
+    }
+
+    .chat-status.loaded {
+      color: #16a34a;
+    }
+
+    .chat-status.loading {
+      color: #f59e0b;
+    }
+
+    .chat-status.error {
+      color: #dc2626;
+    }
+
+    .chat-widget-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: var(--chat-blue);
+      color: #ffffff;
+      border: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.55rem;
+      box-shadow: 0 18px 32px rgba(193, 0, 0, 0.24);
+      cursor: pointer;
+      z-index: 9999;
+      transition: transform 0.15s ease, opacity 0.15s ease;
+    }
+
+    .chat-widget-icon:hover {
+      transform: translateY(-2px);
+      opacity: 0.95;
+    }
+
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .top-bar h1 {
+      font-size: clamp(2rem, 3vw, 2.8rem);
+      max-width: 75%;
+    }
+
+    .top-bar .tag {
+      background: var(--accent);
+      color: #fff;
+      padding: 10px 16px;
+      border-radius: 999px;
+      font-size: 0.9rem;
+      white-space: nowrap;
+    }
+
+    .instructions p {
+      margin: 0.85rem 0;
+    }
+
+    .bottom-note {
+      font-size: 0.95rem;
+      color: var(--muted);
+      margin-top: 24px;
+      line-height: 1.6;
+    }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: rgba(255, 255, 255, 0.97);
+      border: 1px solid rgba(193, 0, 0, 0.28);
+      border-radius: 16px;
+      padding: 14px 18px;
+      box-shadow: 0 18px 32px rgba(0, 0, 0, 0.15);
+      color: var(--text);
+      font-size: 0.95rem;
+      z-index: 10000;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+      pointer-events: none;
+      max-width: 320px;
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translateY(0);
+      pointer-events: auto;
+    }
+
+    @media (max-width: 960px) {
+      .page {
+        grid-template-columns: 1fr;
+        padding: 20px;
+      }
+
+      .langflow-card {
+        position: relative;
+        max-height: none;
+      }
+    }
+
+    /* Hide langflow-chat widget initially and control visibility */
+    langflow-chat {
+      display: none !important;
+      position: fixed !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      top: 100px !important;
+      z-index: 10001 !important;
+      max-width: 420px !important;
+      border-radius: 8px !important;
+    }
+
+    langflow-chat[open="true"] {
+      display: block !important;
+    }
+  </style>
+</head>
+<body>
+  <button class="chat-widget-icon" id="chat-widget-icon" aria-label="Open Langflow chat">💬</button>
+  <div class="toast" id="toast-message">Chat cleared successfully.</div>
+  <langflow-chat id="langflow-chat-widget" host_url="http://localhost:7860" flow_id="2b0cf117-501d-40fb-8842-2d255bfc662e" api_key="sk-Srstix2SDwT6vtuT5_92AAC5YIVgrvA6kZBj1I77rj0" show_icon="false" chat_position="right" start_open="false" style="position: fixed; right: 24px; bottom: 24px; z-index: 10001;"></langflow-chat>
+  <div class="page">
+    <section class="panel">
+      <div class="top-bar">
+        <div>
+          <h1>AI Testcase Generator</h1>
+          <p style="margin: 10px 0 0; color: var(--muted); max-width: 640px;">
+            Use the chatbot widget to generate test cases from user stories, then copy or clear output with one click.
+          </p>
+        </div>
+        <span class="tag">Banking / Sports / Construction / Real Estate</span>
+      </div>
+
+      <div class="instructions">
+        <h2>How to use</h2>
+        <p>Step 1: Paste your own user story into the text box, or choose a sample story from the buttons below.</p>
+        <p>Step 2: Click <strong>Generate Testcases</strong> to create the AI testcase prompt instantly.</p>
+        <p>Step 3: Click the <strong>Open Langflow Chat</strong> button to open the Langflow chat widget.</p>
+        <p>Step 4: Ask the Langflow chat to generate detailed test cases for the story you entered.</p>
+        <p>Step 5: Use <strong>Copy Output</strong> to copy the generated text, or <strong>Clear Chat</strong> to reset the story and output box.</p>
+        <p>Tip: Sample stories cover banking, sports, construction, and real estate domains so you can test the generator quickly.</p>
+      </div>
+
+      <div class="section">
+        <label for="story-input">User story input</label>
+        <textarea id="story-input" placeholder="Type or paste a user story here...">As a customer, I want to transfer funds between my accounts so that I can manage my money efficiently.</textarea>
+      </div>
+
+      <div class="control-row">
+        <button id="generate-button">Generate Testcases</button>
+        <button id="copy-output" class="secondary">Copy Output</button>
+        <button id="clear-chat" class="secondary">Clear Chat</button>
+      </div>
+
+      <div class="section">
+        <h2>Sample user stories</h2>
+        <div class="story-list">
+          <div class="sample-item">
+            <h3>Banking sample 1</h3>
+            <div class="sample-text">As a customer, I want to transfer funds between my accounts so that I can manage my money efficiently.</div>
+            <div class="sample-actions">
+              <button class="sample-button" data-story="As a customer, I want to transfer funds between my accounts so that I can manage my money efficiently.">Use story</button>
+              <button class="sample-copy" data-story="As a customer, I want to transfer funds between my accounts so that I can manage my money efficiently.">Copy text</button>
+            </div>
+          </div>
+          <div class="sample-item">
+            <h3>Banking sample 2</h3>
+            <div class="sample-text">As a customer, I want to view my transaction history for the last 90 days so that I can track my spending.</div>
+            <div class="sample-actions">
+              <button class="sample-button" data-story="As a customer, I want to view my transaction history for the last 90 days so that I can track my spending.">Use story</button>
+              <button class="sample-copy" data-story="As a customer, I want to view my transaction history for the last 90 days so that I can track my spending.">Copy text</button>
+            </div>
+          </div>
+          <div class="sample-item">
+            <h3>Sports sample</h3>
+            <div class="sample-text">As a coach, I want to schedule team practices based on player availability so that we can prepare for the next match.</div>
+            <div class="sample-actions">
+              <button class="sample-button" data-story="As a coach, I want to schedule team practices based on player availability so that we can prepare for the next match.">Use story</button>
+              <button class="sample-copy" data-story="As a coach, I want to schedule team practices based on player availability so that we can prepare for the next match.">Copy text</button>
+            </div>
+          </div>
+          <div class="sample-item">
+            <h3>Construction sample</h3>
+            <div class="sample-text">As a project manager, I want to review construction milestones weekly so that my site remains on schedule.</div>
+            <div class="sample-actions">
+              <button class="sample-button" data-story="As a project manager, I want to review construction milestones weekly so that my site remains on schedule.">Use story</button>
+              <button class="sample-copy" data-story="As a project manager, I want to review construction milestones weekly so that my site remains on schedule.">Copy text</button>
+            </div>
+          </div>
+          <div class="sample-item">
+            <h3>Real estate sample</h3>
+            <div class="sample-text">As a buyer, I want to compare nearby properties by price and amenities so that I can choose the best option.</div>
+            <div class="sample-actions">
+              <button class="sample-button" data-story="As a buyer, I want to compare nearby properties by price and amenities so that I can choose the best option.">Use story</button>
+              <button class="sample-copy" data-story="As a buyer, I want to compare nearby properties by price and amenities so that I can choose the best option.">Copy text</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="section">
+        <h2>Generated output</h2>
+        <div id="output" class="output-box" role="region" aria-live="polite">
+          Your generated test case summary will appear here after you click Generate.
+        </div>
+      </div>
+
+      <div class="bottom-note">
+        <strong>Note:</strong> This page contains one HTML file only, no external libraries other than the Langflow embed script. Replace the placeholder values with your own Langflow host URL, flow ID, and API key to activate the embedded chat.
+      </div>
+    </section>
+
+    <aside class="langflow-card">
+      <h2>Langflow Testcase Chat</h2>
+      <p class="chat-info">The embedded Langflow chat is configured to show only the floating icon. Open it from the top-right and discuss testcase generation directly with the AI.</p>
+      <button class="chat-launch" id="open-chat">Open Langflow Chat</button>
+      <div id="chat-status" class="chat-status loading">Langflow chat is loading...</div>
+      <div class="section">
+        <h3>Embed details</h3>
+        <p class="chat-info">host_url, flow_id, and API key are defined inside the page script. Update them once you have a valid Langflow deployment.</p>
+      </div>
+      <div class="section">
+        <h3>Quick tips</h3>
+        <ul style="padding-left: 18px; margin: 0; color: var(--muted);">
+          <li>Use clear user stories for better testcases.</li>
+          <li>Ask the chat to generate boundary, positive, and negative tests.</li>
+          <li>Copy output and paste into your test management tool.</li>
+        </ul>
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    const hostUrl = 'http://localhost:7860';
+    const flowId = '2b0cf117-501d-40fb-8842-2d255bfc662e';
+    const apiKey = 'sk-Srstix2SDwT6vtuT5_92AAC5YIVgrvA6kZBj1I77rj0';
+
+    const storyInput = document.getElementById('story-input');
+    const outputBox = document.getElementById('output');
+    const generateButton = document.getElementById('generate-button');
+    const copyButton = document.getElementById('copy-output');
+    const clearButton = document.getElementById('clear-chat');
+    const sampleButtons = document.querySelectorAll('.sample-button');
+    const sampleCopyButtons = document.querySelectorAll('.sample-copy');
+    const openChatButton = document.getElementById('open-chat');
+    const chatWidgetIcon = document.getElementById('chat-widget-icon');
+
+    const sampleMapping = {
+      'Banking sample 1': 'As a customer, I want to transfer funds between my accounts so that I can manage my money efficiently.',
+      'Banking sample 2': 'As a customer, I want to view my transaction history for the last 90 days so that I can track my spending.',
+      'Sports sample': 'As a coach, I want to schedule team practices based on player availability so that we can prepare for the next match.',
+      'Construction sample': 'As a project manager, I want to review construction milestones weekly so that my site remains on schedule.',
+      'Real estate sample': 'As a buyer, I want to compare nearby properties by price and amenities so that I can choose the best option.'
+    };
+
+    sampleButtons.forEach(button => {
+      button.addEventListener('click', () => {
+        storyInput.value = button.dataset.story;
+        outputBox.textContent = 'Sample user story loaded. Click Generate Testcases to create the output.';
+      });
+    });
+
+    sampleCopyButtons.forEach(button => {
+      button.addEventListener('click', async () => {
+        const story = button.dataset.story;
+        try {
+          await navigator.clipboard.writeText(story);
+          button.textContent = 'Copied!';
+          showToast('Sample story copied to clipboard.');
+          setTimeout(() => (button.textContent = 'Copy text'), 1500);
+        } catch (err) {
+          outputBox.textContent = 'Unable to copy sample text. Please use the story manually.';
+        }
+      });
+    });
+
+    generateButton.addEventListener('click', () => {
+      const story = storyInput.value.trim();
+      if (!story) {
+        outputBox.textContent = 'Please enter a user story before generating testcases.';
+        return;
+      }
+
+      const testcasePrompt = `Generate detailed test cases for the following user story:\n\n${story}\n\nInclude positive, negative, and boundary test scenarios with clear titles and steps.`;
+      outputBox.textContent = testcasePrompt;
+    });
+
+    copyButton.addEventListener('click', async () => {
+      const text = outputBox.textContent.trim();
+      if (!text || text === 'Your generated test case summary will appear here after you click Generate.') {
+        outputBox.textContent = 'Nothing available to copy yet. Generate testcases first.';
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(text);
+        copyButton.textContent = 'Copied!';
+        showToast('Output copied to clipboard.');
+        setTimeout(() => (copyButton.textContent = 'Copy Output'), 1500);
+      } catch (err) {
+        outputBox.textContent = 'Copy failed. Please copy manually from the box.';
+      }
+    });
+
+    clearButton.addEventListener('click', () => {
+      storyInput.value = '';
+      outputBox.textContent = 'Chat cleared. Enter a new story or select a sample story to continue.';
+      storyInput.focus();
+      showToast('Chat cleared successfully.');
+      const langflowChatWidget = document.getElementById('langflow-chat-widget');
+      if (langflowChatWidget) {
+        langflowChatWidget.open = false;
+      }
+    });
+
+    function showToast(message) {
+      const toast = document.getElementById('toast-message');
+      if (!toast) return;
+      toast.textContent = message;
+      toast.classList.add('visible');
+      clearTimeout(window.toastTimeout);
+      window.toastTimeout = setTimeout(() => {
+        toast.classList.remove('visible');
+      }, 2500);
+    }
+
+    const langflowChatWidget = document.getElementById('langflow-chat-widget');
+    const chatStatus = document.getElementById('chat-status');
+
+    function updateLangflowStatus() {
+      if (!chatStatus) return;
+      if (window.langflowWidgetLoaded) {
+        chatStatus.textContent = 'Langflow chat loaded. Click the icon to open.';
+        chatStatus.className = 'chat-status loaded';
+      } else if (window.langflowWidgetLoadFailed) {
+        chatStatus.textContent = 'Langflow chat failed to load. Check the script path and network.';
+        chatStatus.className = 'chat-status error';
+      } else {
+        chatStatus.textContent = 'Langflow chat is loading...';
+        chatStatus.className = 'chat-status loading';
+      }
+    }
+
+    updateLangflowStatus();
+
+    function openLangflowWidget() {
+      if (langflowChatWidget && window.langflowWidgetLoaded) {
+        langflowChatWidget.open = true;
+        // Override CSS display: none !important with setAttribute for stronger specificity
+        langflowChatWidget.setAttribute('open', 'true');
+        showToast('Opening Langflow chat...');
+      } else {
+        showToast('Langflow chat is still loading. Please wait a moment.');
+      }
+    }
+
+    openChatButton.addEventListener('click', openLangflowWidget);
+    chatWidgetIcon.addEventListener('click', openLangflowWidget);
+  </script>
+  <script>
+    (function () {
+      const scriptCandidates = [
+        'https://cdn.jsdelivr.net/gh/langflow-ai/langflow-embedded-chat@main/dist/build/static/js/bundle.min.js',
+        './bundle.min.js'
+      ];
+
+      function loadScriptSequentially(urls, idx = 0) {
+        if (idx >= urls.length) {
+          window.langflowWidgetLoadFailed = true;
+          updateLangflowStatus();
+          console.error('All Langflow script candidates failed to load.');
+          return;
+        }
+        const url = urls[idx];
+        const s = document.createElement('script');
+        s.src = url;
+        s.async = true;
+        s.onload = () => {
+          window.langflowWidgetLoaded = true;
+          window.langflowWidgetLoadFailed = false;
+          console.info('Loaded Langflow script from', url);
+          // Ensure the embedded element has the configured attributes
+          const el = document.getElementById('langflow-chat-widget');
+          if (el) {
+            el.setAttribute('host_url', hostUrl);
+            el.setAttribute('flow_id', flowId);
+            el.setAttribute('api_key', apiKey);
+          }
+          updateLangflowStatus();
+        };
+        s.onerror = () => {
+          console.warn('Failed to load Langflow script from', url);
+          s.remove();
+          loadScriptSequentially(urls, idx + 1);
+        };
+        document.body.appendChild(s);
+      }
+
+      // Small delay to ensure the page's inline scripts and DOM are ready
+      setTimeout(() => loadScriptSequentially(scriptCandidates, 0), 50);
+    })();
+  </script>
+</body>
+</html>

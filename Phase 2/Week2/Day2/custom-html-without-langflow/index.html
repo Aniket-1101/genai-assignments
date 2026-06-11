@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Test Case Generator Chat UI</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --panel: rgba(15, 23, 42, 0.96);
+      --panel-strong: #111827;
+      --border: rgba(148, 163, 184, 0.18);
+      --text: #e2e8f0;
+      --muted: #94a3b8;
+      --accent: #38bdf8;
+      --accent-strong: #0ea5e9;
+      --success: #22c55e;
+      --danger: #ef4444;
+      --shadow: 0 24px 80px rgba(15, 23, 42, 0.35);
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: radial-gradient(circle at top left, #3b82f6 0%, transparent 28%),
+        radial-gradient(circle at bottom right, #6366f1 0%, transparent 24%),
+        linear-gradient(180deg, #020617 0%, #071422 100%);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    main {
+      padding: 40px 28px 80px 28px;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 4vw, 3.4rem);
+      margin: 0 0 16px;
+      letter-spacing: -0.04em;
+    }
+
+    p.lead {
+      max-width: 760px;
+      color: var(--muted);
+      font-size: 1.05rem;
+      margin: 0 0 28px;
+    }
+
+    .hero-card {
+      border: 1px solid var(--border);
+      background: rgba(15, 23, 42, 0.9);
+      box-shadow: var(--shadow);
+      border-radius: 24px;
+      padding: 28px;
+      margin-top: 32px;
+    }
+
+    .hero-card h2,
+    .hero-card p {
+      margin: 0;
+    }
+
+    .hero-card h2 {
+      font-size: 1.45rem;
+      margin-bottom: 10px;
+    }
+
+    .hero-card .sample-story {
+      margin-top: 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .story-box {
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      background: rgba(15, 23, 42, 0.85);
+      padding: 18px;
+      border-radius: 16px;
+      position: relative;
+      font-size: 0.98rem;
+      white-space: pre-wrap;
+      color: var(--text);
+      font-family: inherit;
+      resize: vertical;
+    }
+
+    .story-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .btn,
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 0.9rem 1.3rem;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
+      color: white;
+      background: var(--accent);
+    }
+
+    .btn:hover,
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 14px 28px rgba(56, 189, 248, 0.22);
+    }
+
+    .btn-secondary {
+      background: #334155;
+    }
+
+    .btn-danger {
+      background: var(--danger);
+    }
+
+    .btn-success {
+      background: var(--success);
+    }
+
+    .panel-toggle {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      z-index: 1002;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      background: rgba(15, 23, 42, 0.95);
+      border: 1px solid rgba(148, 163, 184, 0.2);
+      border-radius: 999px;
+      box-shadow: 0 18px 42px rgba(15, 23, 42, 0.32);
+    }
+
+    .panel-toggle .state-indicator {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 0 3px rgba(56, 189, 248, 0.12);
+    }
+
+    .panel-toggle.off .state-indicator {
+      background: #f97316;
+    }
+
+    .panel-toggle span {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    .chat-panel {
+      position: fixed;
+      top: 90px;
+      right: 24px;
+      width: min(420px, calc(100vw - 32px));
+      max-height: calc(100vh - 120px);
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      gap: 16px;
+      padding: 20px;
+      border-radius: 28px;
+      background: var(--panel);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      box-shadow: var(--shadow);
+      z-index: 1001;
+      opacity: 1;
+      transform: translateY(0);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .chat-panel.hidden {
+      opacity: 0;
+      transform: translateY(-20px);
+      pointer-events: none;
+    }
+
+    .chat-panel header {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .chat-panel header h3 {
+      margin: 0;
+      font-size: 1.1rem;
+    }
+
+    .chat-panel header p {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+      max-width: 280px;
+    }
+
+    .chat-messages {
+      overflow-y: auto;
+      min-height: 180px;
+      max-height: 360px;
+      padding: 14px;
+      background: rgba(15, 23, 42, 0.75);
+      border: 1px solid rgba(148, 163, 184, 0.12);
+      border-radius: 18px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .message {
+      padding: 14px 16px;
+      border-radius: 18px;
+      font-size: 0.95rem;
+      line-height: 1.6;
+    }
+
+    .message.user {
+      background: rgba(59, 130, 246, 0.16);
+      border: 1px solid rgba(59, 130, 246, 0.24);
+      color: #dbeafe;
+      justify-self: end;
+    }
+
+    .message.bot {
+      background: rgba(71, 85, 105, 0.18);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+      color: var(--text);
+    }
+
+    .chat-footer {
+      display: grid;
+      gap: 12px;
+    }
+
+    .chat-footer label {
+      display: block;
+      font-size: 0.92rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .chat-footer textarea,
+    .chat-footer input {
+      width: 100%;
+      border: 1px solid rgba(148, 163, 184, 0.18);
+      border-radius: 16px;
+      background: rgba(15, 23, 42, 0.92);
+      color: var(--text);
+      padding: 14px 16px;
+      font-size: 0.95rem;
+      resize: vertical;
+    }
+
+    .chat-footer textarea {
+      min-height: 100px;
+      max-height: 160px;
+    }
+
+    .chat-actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .chat-actions button {
+      width: 100%;
+    }
+
+    .footer-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: space-between;
+      flex-wrap: wrap;
+    }
+
+    .footer-actions button {
+      width: 100%;
+      max-width: 160px;
+    }
+
+    .api-status {
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .fixed-note {
+      position: fixed;
+      bottom: 20px;
+      left: 24px;
+      right: 24px;
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 16px 20px;
+      border-radius: 20px;
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+      color: var(--muted);
+      font-size: 0.9rem;
+      display: none;
+    }
+
+    @media (max-width: 720px) {
+      .panel-toggle {
+        right: 12px;
+        top: 12px;
+      }
+
+      .chat-panel {
+        right: 12px;
+        top: 72px;
+        width: calc(100vw - 24px);
+        max-height: calc(100vh - 96px);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Test Case Generator Chat UI</h1>
+    <p class="lead">Use this inline chat interface to generate test cases directly via the Langflow API. Toggle the chat panel, paste a sample user story, and send a prompt to receive structured test case guidance.</p>
+
+    <section class="hero-card">
+      <h2>How to use</h2>
+      <p>Write your test case prompt in the chat input, then click <strong>Send</strong>. Use the sample user story below to get started quickly, or copy it into the chat input field.</p>
+
+      <div class="sample-story">
+        <textarea class="story-box" id="sampleStory" rows="6" aria-label="Editable sample user story">As a bank customer, I want to transfer funds from my savings account to another person's checking account so that I can pay a bill securely and immediately. The transfer should only proceed if I have enough available balance, the beneficiary account exists and is verified, and the transaction is authenticated with a valid OTP. If the transfer fails, I should receive a clear error message explaining the reason.</textarea>
+        <div class="story-actions">
+          <button class="btn btn-secondary" id="copyStoryBtn">Copy Sample Story</button>
+          <button class="btn btn-success" id="pasteStoryBtn">Paste into Chat Prompt</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <div class="panel-toggle off" id="togglePanel">
+    <div class="state-indicator"></div>
+    <span id="toggleLabel">Chat off</span>
+    <button class="btn btn-secondary" id="toggleButton" type="button" aria-expanded="false" aria-controls="chatPanel" aria-label="Toggle the test case chat panel">Show Chat</button>
+  </div>
+
+  <section class="chat-panel hidden" id="chatPanel" aria-live="polite" aria-label="Test case generator chat panel" aria-hidden="true" role="region">
+    <header>
+      <div>
+        <h3>Test Case Generator</h3>
+        <p>Enter a user story or test description and press Send. Use the clear button to reset the conversation and the copy button to save the bot output.</p>
+      </div>
+      <div class="footer-actions">
+        <button class="btn btn-secondary" id="clearChatBtn" type="button">Clear Messages</button>
+        <button class="btn btn-secondary" id="copyResponseBtn" type="button">Copy Output</button>
+      </div>
+    </header>
+
+    <div class="chat-messages" id="chatMessages">
+      <div class="message bot">Welcome to the Test Case Generator. Paste your user story or prompt and click <strong>Send</strong> to begin.</div>
+    </div>
+
+    <div class="chat-footer">
+        <label for="userPrompt">Your test case prompt</label>
+      <textarea id="userPrompt" placeholder="e.g. Generate test cases for fund transfer with balance validation, beneficiary verification, and OTP authentication."></textarea>
+
+      <div class="chat-actions">
+        <button class="btn" id="sendBtn" type="button">Send</button>
+        <button class="btn btn-secondary" id="addSampleBtn" type="button">Use Sample Story</button>
+      </div>
+      <div class="footer-actions" id="beautifyControls" style="display:none; gap: 10px; margin-top: 8px;">
+        <button class="btn btn-success" id="beautifyBtn" type="button">Beautify Output</button>
+        <button class="btn btn-secondary" id="downloadPdfBtn" type="button">Download PDF</button>
+      </div>
+      <div class="api-status" id="apiStatus">API endpoint: http://localhost:7860/api/v1/run/2b0cf117-501d-40fb-8842-2d255bfc662e — make sure Langflow is running locally.</div>
+    </div>
+  </section>
+
+  <div class="fixed-note" id="noteBox" aria-live="polite"></div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    const togglePanel = document.getElementById('togglePanel');
+    const toggleButton = document.getElementById('toggleButton');
+    const toggleLabel = document.getElementById('toggleLabel');
+    const chatPanel = document.getElementById('chatPanel');
+    const clearChatBtn = document.getElementById('clearChatBtn');
+    const copyResponseBtn = document.getElementById('copyResponseBtn');
+    const copyStoryBtn = document.getElementById('copyStoryBtn');
+    const pasteStoryBtn = document.getElementById('pasteStoryBtn');
+    const addSampleBtn = document.getElementById('addSampleBtn');
+    const sendBtn = document.getElementById('sendBtn');
+    const beautifyBtn = document.getElementById('beautifyBtn');
+    const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+    const beautifyControls = document.getElementById('beautifyControls');
+    const chatMessages = document.getElementById('chatMessages');
+    const userPrompt = document.getElementById('userPrompt');
+    const sampleStory = document.getElementById('sampleStory');
+    const noteBox = document.getElementById('noteBox');
+
+    const apiEndpoint = 'http://localhost:7860/api/v1/run/2b0cf117-501d-40fb-8842-2d255bfc662e';
+    const initialStory = sampleStory.value.trim();
+    let lastRawBotResponse = '';
+    let lastBeautifiedText = '';
+
+    function setNote(message, duration = 2800) {
+      noteBox.textContent = message;
+      noteBox.style.display = 'block';
+      setTimeout(() => { noteBox.style.display = 'none'; }, duration);
+    }
+
+    function updateToggle(isOpen) {
+      chatPanel.classList.toggle('hidden', !isOpen);
+      chatPanel.setAttribute('aria-hidden', String(!isOpen));
+      togglePanel.classList.toggle('off', !isOpen);
+      toggleLabel.textContent = isOpen ? 'Chat on' : 'Chat off';
+      toggleButton.textContent = isOpen ? 'Hide Chat' : 'Show Chat';
+      toggleButton.setAttribute('aria-expanded', String(isOpen));
+    }
+
+    toggleButton.addEventListener('click', () => {
+      const isHidden = chatPanel.classList.contains('hidden');
+      updateToggle(isHidden);
+    });
+
+    function addMessage(text, role = 'bot') {
+      const message = document.createElement('div');
+      message.className = `message ${role}`;
+      message.innerHTML = text.replace(/\n/g, '<br>');
+      chatMessages.appendChild(message);
+      chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    clearChatBtn.addEventListener('click', () => {
+      chatMessages.innerHTML = '';
+      addMessage('Test Case Generator cleared. Paste your prompt and click Send to continue.', 'bot');
+      setNote('Chat cleared successfully.');
+    });
+
+    copyResponseBtn.addEventListener('click', async () => {
+      const botMessages = Array.from(chatMessages.querySelectorAll('.message.bot'))
+        .map(el => el.textContent.trim())
+        .filter(Boolean);
+      const outputs = botMessages.length ? botMessages[botMessages.length - 1] : '';
+      if (!outputs) {
+        setNote('No bot output available to copy.');
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(outputs);
+        setNote('Latest bot response copied to clipboard.');
+      } catch (error) {
+        setNote('Copy failed. Please copy manually.');
+      }
+    });
+
+    copyStoryBtn.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(sampleStory.value.trim());
+        setNote('Sample user story copied.');
+      } catch (error) {
+        setNote('Copy failed. Please highlight and copy manually.');
+      }
+    });
+
+    beautifyBtn.addEventListener('click', () => {
+      if (!lastRawBotResponse) {
+        setNote('No API output available to beautify.');
+        return;
+      }
+      lastBeautifiedText = beautifyTestCases(lastRawBotResponse);
+      if (!lastBeautifiedText) {
+        lastBeautifiedText = lastRawBotResponse;
+      }
+      const botMessages = chatMessages.querySelectorAll('.message.bot');
+      const latestBot = botMessages[botMessages.length - 1];
+      latestBot.innerHTML = lastBeautifiedText.replace(/\n/g, '<br>');
+      beautifyBtn.style.display = 'none';
+      downloadPdfBtn.style.display = 'inline-flex';
+      setNote('Beautified output displayed. Download PDF if needed.');
+    });
+
+    downloadPdfBtn.addEventListener('click', () => {
+      const content = lastBeautifiedText || lastRawBotResponse;
+      if (!content) {
+        setNote('No text available to download.');
+        return;
+      }
+      const { jsPDF } = window.jspdf || {};
+      if (!jsPDF) {
+        setNote('PDF library is not loaded.');
+        return;
+      }
+      const doc = new jsPDF({ unit: 'pt', format: 'letter' });
+      const margin = 40;
+      const maxWidth = doc.internal.pageSize.width - margin * 2;
+      const lines = doc.splitTextToSize(content, maxWidth);
+      doc.setFontSize(12);
+      doc.text(lines, margin, 60);
+      doc.save('test-cases.pdf');
+    });
+
+    pasteStoryBtn.addEventListener('click', () => {
+      updateToggle(true);
+      userPrompt.value = sampleStory.value.trim();
+      userPrompt.focus();
+      setNote('Sample story pasted into the input field.');
+    });
+
+    addSampleBtn.addEventListener('click', () => {
+      updateToggle(true);
+      userPrompt.value = sampleStory.value.trim();
+      userPrompt.focus();
+      setNote('Sample story added to your prompt.');
+    });
+
+    async function sendPrompt() {
+      const prompt = userPrompt.value.trim();
+      if (!prompt) {
+        setNote('Enter a prompt before sending.');
+        return;
+      }
+      sendBtn.disabled = true;
+      sendBtn.textContent = 'Sending…';
+      addMessage(prompt, 'user');
+      addMessage('Generating test case output…', 'bot');
+      try {
+        const response = await fetch(apiEndpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer sk-Srstix2SDwT6vtuT5_92AAC5YIVgrvA6kZBj1I77rj0',
+            'x-api-key': 'sk-Srstix2SDwT6vtuT5_92AAC5YIVgrvA6kZBj1I77rj0',
+          },
+          body: JSON.stringify({
+            output_type: 'chat',
+            input_type: 'chat',
+            input_value: prompt,
+            
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const text = data?.output?.[0]?.data || data?.output || JSON.stringify(data, null, 2);
+        lastRawBotResponse = text;
+        lastBeautifiedText = '';
+        beautifyControls.style.display = 'flex';
+        downloadPdfBtn.style.display = 'none';
+        const botMessages = chatMessages.querySelectorAll('.message.bot');
+        if (botMessages.length > 0) {
+          botMessages[botMessages.length - 1].innerHTML = text.replace(/\n/g, '<br>');
+        } else {
+          addMessage(text, 'bot');
+        }
+        setNote('Response received. Click Beautify to format the test cases.');
+      } catch (error) {
+        const botMessages = chatMessages.querySelectorAll('.message.bot');
+        if (botMessages.length > 0) {
+          botMessages[botMessages.length - 1].textContent = 'Failed to contact the Langflow API. Check the local endpoint and server status.';
+        }
+        setNote('Unable to reach API. Ensure the server is running on localhost:7860.');
+        console.error(error);
+      } finally {
+        sendBtn.disabled = false;
+        sendBtn.textContent = 'Send';
+      }
+    }
+
+    sendBtn.addEventListener('click', sendPrompt);
+
+    function beautifyTestCases(rawText) {
+      const normalized = rawText.replace(/\r/g, '');
+      const lines = normalized.split('\n').map(line => line.trim()).filter(Boolean);
+      const extracted = lines.filter(line => /test case|testcase|tc\b|scenario|expected|given|when|then/i.test(line) || /^[\-*\u2022]/.test(line) || /^\d+\./.test(line));
+      const source = extracted.length ? extracted : lines;
+      return source.map((line, index) => {
+        const cleanLine = line.replace(/^[\-*\u2022\s]+/, '');
+        return `${index + 1}. ${cleanLine}`;
+      }).join('\n');
+    }
+
+    userPrompt.addEventListener('keydown', event => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        sendPrompt();
+      }
+    });
+
+    updateToggle(false);
+  </script>
+</body>
+</html>
